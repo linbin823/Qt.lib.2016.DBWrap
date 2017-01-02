@@ -11,4 +11,4 @@ TEMPLATE = app
 
 SOURCES += main.cpp
 
-include( ../src/DBProcess.pri)
+include( ../src/dbwrap.pri)
