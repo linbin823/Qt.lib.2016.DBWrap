@@ -22,6 +22,8 @@
 //#include <QMessageBox>
 #include <QSqlError>
 #include <QFileInfo>
+
+#include "sqlite3.h"
 //=================================
 CDBProcess::CDBProcess(const QString strType /* = "sqlite"*/)
 {
@@ -46,7 +48,7 @@ CDBProcess::CDBProcess(const QString strType /* = "sqlite"*/)
     {
         __strConnName = QString("MyDBProcessConn%1").arg(++iConnIdx);
         QSqlDatabase dbConn = QSqlDatabase::database(__strConnName, false);
-
+        //to avoid connName confliction
         if(dbConn.isValid())//存在连接
         {
             continue;
@@ -447,6 +449,65 @@ long CDBProcess::getRecordCount(void *p) const
         return iRows;
     }
 }
+
+/*
+ * sqliteDBMemFile 针对sqlite3内存型数据库的 save和load封装
+ * 输入参数：
+ * 参数1：QString filename 文件名称
+ * 参数2：bool save true保存到文件，false从文件读取
+ * 返回数值：
+ * 1、成功true
+ * 2、失败false （不是sqlite数据库，filename不成立）
+ * 功能描述：
+ * 1、数据库保存和读取
+ */
+bool CDBProcess::sqliteDBMemFile(QString filename, bool save ){
+
+    bool state = false;
+
+
+    if(filename.isNull() || filename.isEmpty() ) return state;
+    if(__strDbType != "SQLITE" ) return state;
+
+
+    QVariant v = m_pDB->driver()->handle();
+    if( v.isValid() && qstrcmp(v.typeName(),"sqlite3*") == 0 )
+    {
+        // v.data() returns a pointer to the handle
+        sqlite3 * handle = *static_cast(v.data());
+        if( handle != 0 ) // check that it is not NULL
+        {
+            sqlite3 * pInMemory = handle;
+            const char * zFilename = filename.toLocal8Bit().data();
+            int rc; /* Function return code */
+            sqlite3 *pFile; /* Database connection opened on zFilename */
+            sqlite3_backup *pBackup; /* Backup object used to copy data */
+            sqlite3 *pTo; /* Database to copy to (pFile or pInMemory) */
+            sqlite3 *pFrom; /* Database to copy from (pFile or pInMemory) */
+
+            rc = sqlite3_open( zFilename, &pFile );
+            if( rc==SQLITE_OK ){
+                pFrom = ( save ? pInMemory : pFile);
+                pTo = ( save ? pFile : pInMemory);
+
+                pBackup = sqlite3_backup_init(pTo, "main", pFrom, "main");
+                if( pBackup ){
+                        (void)sqlite3_backup_step(pBackup, -1);
+                        (void)sqlite3_backup_finish(pBackup);
+                }
+                rc = sqlite3_errcode(pTo);
+            }
+
+            (void)sqlite3_close(pFile);
+
+            if( rc == SQLITE_OK ) state = true;
+
+        }
+
+    }
+    return state;
+}
+
 #if 0
 //"id%+s|name%-s|age%-d|pret%*d", 15, pch, &i, &iRet
 bool CDBProcess::exexProc(const QString strStoreProc, QString str1, QString &str2)

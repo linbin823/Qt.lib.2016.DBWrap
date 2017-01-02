@@ -1,5 +1,5 @@
-﻿#ifndef __INC_CDBPROCESS_H__82075B33_
-#define __INC_CDBPROCESS_H__82075B33_
+﻿#ifndef DBPROCESS_H
+#define DBPROCESS_H
 
 /************************************************************************
 *Description:                                                           *
@@ -16,6 +16,8 @@
 #include <QDateTime>
 #include <QSqlQuery>
 #include <typeinfo>
+
+class QSqlDriver;
 class QSqlDatabase;
 class QSqlQuery;
 
@@ -268,6 +270,8 @@ public:
     }
     //=================================================
 
+    //just for sqlite memory database. dump to file or load from file
+    bool sqliteDBMemFile(QString filename, bool save );
 
     QSqlDatabase *m_pDB;
 protected:
@@ -283,4 +287,5 @@ private:
     QString __strDbName;
     QList<QSqlQuery *> __lstQrys;
 };
-#endif
+
+#endif //end of DBPROCESS_H
