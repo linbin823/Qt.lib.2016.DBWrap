@@ -12,8 +12,10 @@ int main(int argc, char *argv[])
 
     processor.openDB("test.db");
     processor.transaction();
-    processor.excuteSQL("CREATE TABLE test(sss int,fff int,PRIMARY KEY(sss));");
-    processor.addFieldsValueToTbl("test","sss",i,"fff",j);
+    processor.excuteSQL("CREATE TABLE test(sss INTEGER,fff INTEGER, asd TEXT, PRIMARY KEY(sss));");
+    processor.addFieldsValueToTbl("test","sss",i,"fff",j,"asd",QString("wewe"));
+
+    processor.readFieldsValueFromRec()
     processor.commit();
     processor.closeDB();
 
